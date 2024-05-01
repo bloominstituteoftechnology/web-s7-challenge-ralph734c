@@ -13,10 +13,12 @@ const validationErrors = {
 const formSchema = Yup.object().shape({
   fullName: Yup.string()
     .required()
+    .trim()
     .min(3, validationErrors.fullNameTooShort)
     .max(20, validationErrors.fullNameTooLong),
   size: Yup.string()
     .required()
+    .trim()
     .oneOf(["S", "M", "L"], validationErrors.sizeIncorrect),
 });
 
@@ -38,19 +40,19 @@ const initialFormErrors = {
   fullName: "",
   size: "",
 };
-const initialDisabled = true;
+
 const orderURL = "http://localhost:9009/api/order";
 
 export default function Form() {
   const [formValues, setFormValues] = useState(initialFormValues);
   const [formErrors, setFormErrors] = useState(initialFormErrors);
-  const [disabled, setDisabled] = useState(initialDisabled);
+  const [enabled, setEnabled] = useState(false);
   const [serverFailure, setServerFailure] = useState("");
   const [serverSuccess, setServerSuccess] = useState("");
 
   useEffect(() => {
     formSchema.isValid(formValues).then((isValid) => {
-      setDisabled(isValid);
+      setEnabled(isValid);
     });
   }, [formValues]);
 
@@ -64,11 +66,12 @@ export default function Form() {
           ...prevState,
           toppingList: [...prevState.toppingList, name],
         }));
-        console.log(formValues);
       } else {
         setFormValues((prevState) => ({
           ...prevState,
-          toppingList: prevState.toppingList.filter((box) => box !== name),
+          toppingList: prevState.toppingList.filter(
+            (toppingId) => toppingId !== name
+          ),
         }));
       }
     } else {
@@ -93,14 +96,14 @@ export default function Form() {
     axios
       .post(orderURL, formValues)
       .then((res) => {
-        console.log(res.data.message);
+        console.log(res.data);
         setServerSuccess(res.data.message);
-        setFormValues(initialFormValues)
-        setServerFailure("")
+        setFormValues(initialFormValues);
+        setServerFailure("");
       })
       .catch((err) => {
-        setServerFailure(err.data.message);
-        setServerSuccess("")
+        setServerFailure(err.response.data.message);
+        setServerSuccess("");
       });
   };
 
@@ -165,7 +168,7 @@ export default function Form() {
         ))}
       </div>
       {/* 👇 Make sure the submit stays disabled until the form validates! */}
-      <input type="submit" disabled={!disabled} />
+      <input type="submit" disabled={!enabled} />
     </form>
   );
 }
