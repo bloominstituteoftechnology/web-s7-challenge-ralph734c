@@ -18,7 +18,6 @@ const formSchema = Yup.object().shape({
     .max(20, validationErrors.fullNameTooLong),
   size: Yup.string()
     .required()
-    .trim()
     .oneOf(["S", "M", "L"], validationErrors.sizeIncorrect),
 });
 
@@ -34,7 +33,7 @@ const toppings = [
 const initialFormValues = {
   fullName: "",
   size: "",
-  toppingList: [],
+  toppings: [],
 };
 const initialFormErrors = {
   fullName: "",
@@ -55,7 +54,7 @@ export default function Form() {
       setEnabled(isValid);
     });
   }, [formValues]);
-
+ 
   const onChange = (event) => {
     let { type, checked, name, value } = event.target;
 
@@ -64,12 +63,12 @@ export default function Form() {
       if (checked) {
         setFormValues((prevState) => ({
           ...prevState,
-          toppingList: [...prevState.toppingList, name],
+          toppings: [...prevState.toppings, name],
         }));
       } else {
         setFormValues((prevState) => ({
           ...prevState,
-          toppingList: prevState.toppingList.filter(
+          toppings: prevState.toppings.filter(
             (toppingId) => toppingId !== name
           ),
         }));
@@ -93,10 +92,10 @@ export default function Form() {
 
   const onSubmit = (event) => {
     event.preventDefault();
+
     axios
       .post(orderURL, formValues)
       .then((res) => {
-        console.log(res.data);
         setServerSuccess(res.data.message);
         setFormValues(initialFormValues);
         setServerFailure("");
@@ -110,7 +109,6 @@ export default function Form() {
   return (
     <form onSubmit={onSubmit}>
       <h2>Order Your Pizza</h2>
-      {/* Replace the below with the server messages once that part is built. */}
       {serverSuccess && <div className="success">{serverSuccess}</div>}
       {serverFailure && <div className="failure">{serverFailure}</div>}
 
@@ -152,14 +150,13 @@ export default function Form() {
       </div>
 
       <div className="input-group">
-        {/* 👇 Maybe you could generate the checkboxes dynamically */}
         {toppings.map((topping) => (
           <label key={topping.topping_id}>
             <input
               name={topping.topping_id}
               type="checkbox"
               onChange={onChange}
-              checked={formValues.toppingList.includes(topping.topping_id)}
+              checked={formValues.toppings.includes(topping.topping_id)}
               value={topping.topping_id}
             />
             {topping.text}
@@ -167,7 +164,6 @@ export default function Form() {
           </label>
         ))}
       </div>
-      {/* 👇 Make sure the submit stays disabled until the form validates! */}
       <input type="submit" disabled={!enabled} />
     </form>
   );
